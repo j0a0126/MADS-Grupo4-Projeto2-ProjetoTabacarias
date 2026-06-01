@@ -41,11 +41,26 @@ def gerar_pagina(titulo, tabela_html, mensagem=""):
                 margin-bottom: 20px;
             }}
 
+            .card h2 {{
+                margin-top: 0;
+                color: #1d2b38;
+            }}
+
             .info {{
                 margin-bottom: 15px;
                 background-color: white;
                 padding: 12px;
                 border-left: 4px solid #2c3e50;
+                border-radius: 4px;
+            }}
+
+            .aviso {{
+                margin-bottom: 20px;
+                background-color: #fff0f0;
+                color: red;
+                border-left: 4px solid red;
+                padding: 14px;
+                font-size: 14px;
                 border-radius: 4px;
             }}
 
@@ -115,22 +130,6 @@ def gerar_pagina(titulo, tabela_html, mensagem=""):
             .tabela tr:hover {{
                 background-color: #eef3f7;
             }}
-
-            .chaves {{
-                display: flex;
-                flex-wrap: wrap;
-                gap: 8px;
-                margin-top: 10px;
-            }}
-
-            .chave {{
-                background-color: #ecf0f1;
-                color: #2c3e50;
-                padding: 6px 10px;
-                border-radius: 4px;
-                font-size: 13px;
-                font-weight: bold;
-            }}
         </style>
     </head>
     <body>
@@ -141,11 +140,18 @@ def gerar_pagina(titulo, tabela_html, mensagem=""):
 
         <main>
             <div class="card">
-                <h2>Acesso aos dados</h2>
-                <p>
-                    Introduz uma chave para consultar dados restritos ou funcionalidades específicas.
-                </p>
+                <h2>Informação do Projeto</h2>
+                <p><strong>Projeto 2 - Grupo 4</strong></p>
+                <p>João Azevedo, João Serrano, Gustavo Rodrigues, Pedro Pires</p>
+                <p>Metodologias Ágeis de Desenvolvimento de Software</p>
+            </div>
 
+            <div class="aviso">
+                Aviso: Os dados incluídos neste projeto são fictícios e utilizados exclusivamente em contexto educacional e de demonstração.
+            </div>
+
+            <div class="card">
+                <h2>Acesso aos dados</h2>
                 <form method="POST">
                     <input type="password" name="chave" placeholder="Introduza a chave">
                     <button type="submit">Entrar</button>
