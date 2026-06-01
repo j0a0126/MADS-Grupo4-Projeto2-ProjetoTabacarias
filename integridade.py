@@ -138,17 +138,109 @@ def gerar_relatorio_integridade(get_data):
         lista_erros += "</ul>"
 
     return f"""
-    <html>
+    <!DOCTYPE html>
+    <html lang="pt">
     <head>
         <meta charset="UTF-8">
         <title>Integridade dos Dados</title>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                margin: 0;
+                background-color: #f5f5f5;
+                color: #333;
+            }}
+
+            header {{
+                background-color: #2c3e50;
+                color: white;
+                padding: 20px 30px;
+            }}
+
+            header h1 {{
+                margin: 0;
+                font-size: 28px;
+            }}
+
+            header p {{
+                margin-top: 8px;
+                font-size: 15px;
+            }}
+
+            main {{
+                padding: 20px 30px;
+            }}
+
+            .botao {{
+                display: inline-block;
+                margin-bottom: 15px;
+                padding: 8px 14px;
+                background-color: #2c3e50;
+                color: white;
+                text-decoration: none;
+                border-radius: 4px;
+            }}
+
+            .botao:hover {{
+                background-color: #1a252f;
+            }}
+
+            .card {{
+                background-color: white;
+                padding: 18px;
+                border-radius: 6px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+                margin-bottom: 20px;
+            }}
+
+            .info {{
+                margin-bottom: 15px;
+                background-color: white;
+                padding: 12px;
+                border-left: 4px solid #2c3e50;
+                border-radius: 4px;
+            }}
+
+            ul {{
+                background-color: white;
+                padding: 18px 25px;
+                border-radius: 6px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            }}
+
+            li {{
+                margin-bottom: 8px;
+            }}
+
+            .sucesso {{
+                background-color: white;
+                padding: 15px;
+                border-left: 4px solid #27ae60;
+                border-radius: 4px;
+                font-weight: bold;
+                color: #27ae60;
+            }}
+        </style>
     </head>
     <body>
-        <h1>Relatório de Integridade dos Dados</h1>
-        <p>Esta página verifica problemas nas tabelas da base de dados.</p>
-        {lista_erros}
-        <br>
-        <a href="/">Voltar</a>
+        <header>
+            <h1>Relatório de Integridade dos Dados</h1>
+            <p>Verificação automática da qualidade e consistência das tabelas da base de dados.</p>
+        </header>
+
+        <main>
+            <a class="botao" href="/">Voltar</a>
+
+            <div class="info">
+                Esta página analisa erros como campos vazios, NIFs duplicados, categorias inválidas,
+                valores incorretos e relações inexistentes entre tabelas.
+            </div>
+
+            <div class="card">
+                <h2>Resultado da validação</h2>
+                {lista_erros}
+            </div>
+        </main>
     </body>
     </html>
     """
