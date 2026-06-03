@@ -443,15 +443,6 @@ def gerar_dashboard(get_data):
         </div>
         """)
 
-    g5 = grafico_evolucao_categoria(df)
-    if g5:
-        graficos.append(f"""
-        <div class="grafico-box">
-            <div class="grafico-title">Evolução das Vendas por Categoria</div>
-            <div class="grafico-content">{g5}</div>
-        </div>
-        """)
-
     g6 = grafico_descricao(df)
     if g6:
         graficos.append(f"""
