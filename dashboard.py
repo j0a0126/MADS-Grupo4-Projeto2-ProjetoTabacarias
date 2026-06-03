@@ -212,7 +212,6 @@ def grafico_tempo(df, include_js=False):
     ])
 
     fig.update_layout(
-        title="Volume de Faturação ao Longo do Tempo",
         xaxis_title="Data",
         yaxis_title="Valor (€)",
         height=500,
@@ -240,7 +239,6 @@ def grafico_quantidade_por_tabacaria(df, mapa_tabacarias, include_js=False):
     ])
 
     fig.update_layout(
-        title="Quantidade de Vendas por Tabacaria",
         xaxis_title="Número de vendas",
         yaxis_title="Tabacaria",
         height=550,
@@ -268,7 +266,6 @@ def grafico_valor_por_tabacaria(df, mapa_tabacarias, include_js=False):
     ])
 
     fig.update_layout(
-        title="Volume de Vendas por Tabacaria",
         xaxis_title="Valor (€)",
         yaxis_title="Tabacaria",
         height=550,
@@ -297,7 +294,6 @@ def grafico_categoria(df, include_js=False):
     ])
 
     fig.update_layout(
-        title="Vendas por Categoria",
         height=500,
         margin=dict(l=20, r=20, t=50, b=40)
     )
@@ -330,7 +326,6 @@ def grafico_evolucao_categoria(df, include_js=False):
         ))
 
     fig.update_layout(
-        title="Evolução das Vendas por Categoria",
         xaxis_title="Data",
         yaxis_title="Valor (€)",
         height=500,
@@ -365,7 +360,6 @@ def grafico_descricao(df, include_js=False):
     ])
 
     fig.update_layout(
-        title="Top 10 Vendas por Descrição",
         xaxis_title="Valor (€)",
         yaxis_title="Descrição",
         height=550,
