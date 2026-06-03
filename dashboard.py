@@ -4,14 +4,15 @@ from datetime import datetime
 import re
 
 
+DATA_INICIO = datetime(2026, 1, 1).date()
+DATA_LIMITE = datetime(2026, 6, 30).date()
+
+
 def norm(s):
     return str(s or "").strip().lower()
 
 
 def achar_coluna(df, *nomes):
-    """
-    Procura uma coluna no DataFrame ignorando maiúsculas/minúsculas e espaços.
-    """
     if df is None or df.empty:
         return None
 
@@ -27,12 +28,7 @@ def achar_coluna(df, *nomes):
 
 def para_numero(valor):
     """
-    Converte valores como:
-    1.5
-    1,5
-    1,50 €
-    €1,50
-    para float.
+    Converte valores como 1.5, 1,5, 1,50 €, €1,50 para float.
     """
     if valor is None:
         return None
@@ -45,12 +41,11 @@ def para_numero(valor):
     texto = texto.replace("€", "")
     texto = texto.replace(" ", "")
     texto = texto.replace(",", ".")
-
     texto = re.sub(r"[^0-9.\-]", "", texto)
 
     try:
         return float(texto)
-    except:
+    except Exception:
         return None
 
 
@@ -64,7 +59,7 @@ def para_data(valor):
     if hasattr(valor, "date"):
         try:
             return valor.date()
-        except:
+        except Exception:
             pass
 
     texto = str(valor).strip()
@@ -74,7 +69,7 @@ def para_data(valor):
 
     try:
         return datetime.fromisoformat(texto).date()
-    except:
+    except Exception:
         pass
 
     formatos = [
@@ -89,7 +84,7 @@ def para_data(valor):
     for formato in formatos:
         try:
             return datetime.strptime(texto, formato).date()
-        except:
+        except Exception:
             continue
 
     return None
@@ -97,16 +92,15 @@ def para_data(valor):
 
 def preparar_vendas(vendas_df):
     """
-    Prepara os dados da tabela vendas.
+    Prepara apenas as colunas necessárias para o dashboard.
+    Isto ajuda a poupar memória no Render.
     """
     if vendas_df is None or vendas_df.empty:
-        return pd.DataFrame()
+        return pd.DataFrame(columns=["nif_tabacaria", "valor", "descricao", "data", "categoria"])
 
     vendas_df = vendas_df.copy()
     vendas_df.columns = [str(c).strip() for c in vendas_df.columns]
 
-    col_id = achar_coluna(vendas_df, "ID")
-    col_nif_utilizador = achar_coluna(vendas_df, "NIF_Utilizador", "NIF Utilizador")
     col_nif_tabacaria = achar_coluna(vendas_df, "NIF_Tabacaria", "NIF Tabacaria")
     col_valor = achar_coluna(vendas_df, "Valor")
     col_descricao = achar_coluna(vendas_df, "Descricao", "Descrição")
@@ -118,29 +112,19 @@ def preparar_vendas(vendas_df):
     for _, row in vendas_df.iterrows():
         nif_tabacaria = row.get(col_nif_tabacaria) if col_nif_tabacaria else None
         valor = para_numero(row.get(col_valor)) if col_valor else None
-        data = para_data(row.get(col_data)) if col_data else None
-        descricao = row.get(col_descricao) if col_descricao else ""
-        categoria = row.get(col_categoria) if col_categoria else ""
-        venda_id = row.get(col_id) if col_id else ""
-        nif_utilizador = row.get(col_nif_utilizador) if col_nif_utilizador else ""
 
         if nif_tabacaria is None or str(nif_tabacaria).strip() == "":
             continue
 
-        if valor is None:
-            continue
-
-        if valor <= 0:
+        if valor is None or valor <= 0:
             continue
 
         linhas.append({
-            "id": str(venda_id),
-            "nif_utilizador": str(nif_utilizador),
             "nif_tabacaria": str(nif_tabacaria).strip(),
             "valor": valor,
-            "descricao": str(descricao).strip(),
-            "data": data,
-            "categoria": str(categoria).strip().upper()
+            "descricao": str(row.get(col_descricao, "")).strip() if col_descricao else "",
+            "data": para_data(row.get(col_data)) if col_data else None,
+            "categoria": str(row.get(col_categoria, "")).strip().upper() if col_categoria else ""
         })
 
     return pd.DataFrame(linhas)
@@ -182,32 +166,38 @@ def nome_categoria(categoria):
 
 
 def fig_html(fig, div_id, include_js=False):
+    """
+    Gera HTML mais leve.
+    Apenas o primeiro gráfico carrega a biblioteca Plotly por CDN.
+    """
     return fig.to_html(
         full_html=False,
         include_plotlyjs="cdn" if include_js else False,
         div_id=div_id,
-        config={"responsive": True}
+        config={
+            "responsive": True,
+            "displayModeBar": False
+        }
     )
 
 
-def grafico_tempo(df, include_js=False):
-    if df.empty:
-        return ""
+def filtrar_periodo(df):
+    if df.empty or "data" not in df.columns:
+        return df
 
     df_valid = df[df["data"].notna()].copy()
+    df_valid = df_valid[(df_valid["data"] >= DATA_INICIO) & (df_valid["data"] <= DATA_LIMITE)]
+
+    return df_valid
+
+
+def grafico_tempo(df, include_js=False):
+    df_valid = filtrar_periodo(df)
 
     if df_valid.empty:
         return ""
 
-    # Limitar o gráfico ao período do projeto: até junho de 2026
-    data_inicio = datetime(2026, 1, 1).date()
-    data_limite = datetime(2026, 6, 30).date()
-    df_valid = df_valid[(df_valid["data"] >= data_inicio) & (df_valid["data"] <= data_limite)]
-
-    if df_valid.empty:
-        return ""
-
-    vendas = df_valid.groupby("data")["valor"].sum().sort_index()
+    vendas = df_valid.groupby("data", as_index=True)["valor"].sum().sort_index()
 
     fig = go.Figure(data=[
         go.Scatter(
@@ -222,43 +212,14 @@ def grafico_tempo(df, include_js=False):
     fig.update_layout(
         xaxis_title="Data",
         yaxis_title="Valor (€)",
-        height=500,
+        height=430,
         margin=dict(l=20, r=20, t=20, b=40),
         autosize=True
     )
 
-    fig.update_xaxes(
-        range=[data_inicio, data_limite]
-    )
+    fig.update_xaxes(range=[DATA_INICIO, DATA_LIMITE])
 
     return fig_html(fig, "grafico_tempo", include_js)
-
-
-def grafico_quantidade_por_tabacaria(df, mapa_tabacarias, include_js=False):
-    if df.empty:
-        return ""
-
-    dados = df.groupby("nif_tabacaria").size().sort_values(ascending=True)
-    nomes = [mapa_tabacarias.get(str(nif), str(nif)) for nif in dados.index]
-
-    fig = go.Figure(data=[
-        go.Bar(
-            y=nomes,
-            x=dados.values,
-            orientation="h",
-            marker_color="steelblue"
-        )
-    ])
-
-    fig.update_layout(
-        xaxis_title="Número de vendas",
-        yaxis_title="Tabacaria",
-        height=550,
-        showlegend=False,
-        margin=dict(l=20, r=20, t=50, b=40)
-    )
-
-    return fig_html(fig, "grafico_quantidade_tabacaria", include_js)
 
 
 def grafico_valor_por_tabacaria(df, mapa_tabacarias, include_js=False):
@@ -280,9 +241,9 @@ def grafico_valor_por_tabacaria(df, mapa_tabacarias, include_js=False):
     fig.update_layout(
         xaxis_title="Valor (€)",
         yaxis_title="Tabacaria",
-        height=550,
+        height=430,
         showlegend=False,
-        margin=dict(l=20, r=20, t=50, b=40)
+        margin=dict(l=20, r=20, t=20, b=40)
     )
 
     return fig_html(fig, "grafico_valor_tabacaria", include_js)
@@ -292,8 +253,12 @@ def grafico_categoria(df, include_js=False):
     if df.empty:
         return ""
 
-    dados = df.groupby("categoria")["valor"].sum()
+    df_valid = df[df["categoria"].astype(str).str.strip() != ""].copy()
 
+    if df_valid.empty:
+        return ""
+
+    dados = df_valid.groupby("categoria")["valor"].sum()
     labels = [nome_categoria(c) for c in dados.index]
 
     fig = go.Figure(data=[
@@ -306,72 +271,24 @@ def grafico_categoria(df, include_js=False):
     ])
 
     fig.update_layout(
-        height=500,
-        margin=dict(l=20, r=20, t=50, b=40)
+        height=430,
+        margin=dict(l=20, r=20, t=20, b=20),
+        showlegend=True
     )
 
     return fig_html(fig, "grafico_categoria", include_js)
-
-
-def grafico_evolucao_categoria(df, include_js=False):
-    if df.empty:
-        return ""
-
-    df_valid = df[df["data"].notna()].copy()
-
-    if df_valid.empty:
-        return ""
-
-    # Limitar o gráfico ao período do projeto: até junho de 2026
-    data_inicio = datetime(2026, 1, 1).date()
-    data_limite = datetime(2026, 6, 30).date()
-    df_valid = df_valid[(df_valid["data"] >= data_inicio) & (df_valid["data"] <= data_limite)]
-
-    if df_valid.empty:
-        return ""
-
-    dados = df_valid.groupby(["data", "categoria"])["valor"].sum().reset_index()
-
-    fig = go.Figure()
-
-    for categoria in dados["categoria"].unique():
-        dados_categoria = dados[dados["categoria"] == categoria].sort_values("data")
-
-        fig.add_trace(go.Scatter(
-            x=dados_categoria["data"],
-            y=dados_categoria["valor"],
-            mode="lines+markers",
-            name=nome_categoria(categoria),
-            fill="tozeroy"
-        ))
-
-    fig.update_layout(
-        xaxis_title="Data",
-        yaxis_title="Valor (€)",
-        height=500,
-        hovermode="x unified",
-        margin=dict(l=20, r=20, t=20, b=40)
-    )
-
-    fig.update_xaxes(
-        range=[data_inicio, data_limite]
-    )
-
-    return fig_html(fig, "grafico_evolucao_categoria", include_js)
 
 
 def grafico_descricao(df, include_js=False):
     if df.empty:
         return ""
 
-    df_desc = df.copy()
-    df_desc["descricao"] = df_desc["descricao"].astype(str).str.strip()
-    df_desc = df_desc[df_desc["descricao"] != ""]
+    df_desc = df[df["descricao"].astype(str).str.strip() != ""].copy()
 
     if df_desc.empty:
         return ""
 
-    dados = df_desc.groupby("descricao")["valor"].sum().sort_values(ascending=False).head(10)
+    dados = df_desc.groupby("descricao")["valor"].sum().sort_values(ascending=False).head(8)
     dados = dados.sort_values(ascending=True)
 
     fig = go.Figure(data=[
@@ -386,15 +303,19 @@ def grafico_descricao(df, include_js=False):
     fig.update_layout(
         xaxis_title="Valor (€)",
         yaxis_title="Descrição",
-        height=550,
+        height=430,
         showlegend=False,
-        margin=dict(l=20, r=20, t=50, b=40)
+        margin=dict(l=20, r=20, t=20, b=40)
     )
 
     return fig_html(fig, "grafico_descricao", include_js)
 
 
 def gerar_dashboard(get_data):
+    """
+    Dashboard otimizado para Render Free.
+    Foram mantidos 4 gráficos principais para reduzir o risco de erro de memória.
+    """
     vendas_df = get_data("vendas")
     tabacarias_df = get_data("tabacarias")
 
@@ -416,39 +337,30 @@ def gerar_dashboard(get_data):
         </div>
         """)
 
-    g2 = grafico_quantidade_por_tabacaria(df, mapa_tabacarias)
+    g2 = grafico_valor_por_tabacaria(df, mapa_tabacarias)
     if g2:
         graficos.append(f"""
         <div class="grafico-box">
-            <div class="grafico-title">Quantidade de Vendas por Tabacaria</div>
+            <div class="grafico-title">Volume de Vendas por Tabacaria</div>
             <div class="grafico-content">{g2}</div>
         </div>
         """)
 
-    g3 = grafico_valor_por_tabacaria(df, mapa_tabacarias)
+    g3 = grafico_categoria(df)
     if g3:
         graficos.append(f"""
         <div class="grafico-box">
-            <div class="grafico-title">Volume de Vendas por Tabacaria</div>
+            <div class="grafico-title">Vendas por Categoria</div>
             <div class="grafico-content">{g3}</div>
         </div>
         """)
 
-    g4 = grafico_categoria(df)
+    g4 = grafico_descricao(df)
     if g4:
         graficos.append(f"""
-        <div class="grafico-box">
-            <div class="grafico-title">Vendas por Categoria</div>
-            <div class="grafico-content">{g4}</div>
-        </div>
-        """)
-
-    g6 = grafico_descricao(df)
-    if g6:
-        graficos.append(f"""
         <div class="grafico-box grafico-box-full">
-            <div class="grafico-title">Top 10 Vendas por Descrição</div>
-            <div class="grafico-content">{g6}</div>
+            <div class="grafico-title">Top 8 Vendas por Descrição</div>
+            <div class="grafico-content">{g4}</div>
         </div>
         """)
 
@@ -618,7 +530,7 @@ def gerar_dashboard(get_data):
             <a class="botao" href="/">Voltar</a>
 
             <div class="info">
-                O dashboard apresenta indicadores gerais e gráficos de análise das vendas.
+                Dashboard otimizado para reduzir consumo de memória no Render.
             </div>
 
             <div class="cards">
