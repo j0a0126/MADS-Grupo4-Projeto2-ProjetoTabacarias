@@ -529,9 +529,6 @@ def gerar_dashboard(get_data):
         <main>
             <a class="botao" href="/">Voltar</a>
 
-            <div class="info">
-                Dashboard otimizado para reduzir consumo de memória no Render.
-            </div>
 
             <div class="cards">
                 <div class="card">
