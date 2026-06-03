@@ -34,7 +34,7 @@ As chaves de acesso aos dados privados estão disponíveis neste README e no rel
 A base de dados utilizada no projeto está guardada num Google Sheets com o nome:
 
 ```text
-[https://docs.google.com/spreadsheets/d/1b46eM_6bjc4iFWT81PKz-_Pm3BeFfQqSH6TfScM7yJs/edit?usp=sharing]
+https://docs.google.com/spreadsheets/d/1b46eM_6bjc4iFWT81PKz-_Pm3BeFfQqSH6TfScM7yJs/edit?usp=sharing
 ```
 
 Este ficheiro contém as seguintes folhas:
