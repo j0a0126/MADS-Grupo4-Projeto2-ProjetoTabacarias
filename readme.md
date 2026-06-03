@@ -2,10 +2,8 @@
 
 Aplicação web em Flask que lê dados de um Google Sheets e apresenta tabelas, mapa interativo, dashboard e validação de dados, com controlo de acesso por chaves.
 
-Este projeto foi desenvolvido no âmbito da unidade curricular de **Metodologias Ágeis de Desenvolvimento de Software**, dando continuidade ao Projeto 1 sobre gestão e análise de tabacarias.
-
-> Projeto disponível na plataforma Render.com: [https://mads-grupo4-projeto2-projetotabacarias.onrender.com]  
-> As chaves de acesso aos dados privados estão disponíveis neste README e no relatório do projeto.
+Projeto disponível na plataforma Render.com: [https://mads-grupo4-projeto2-projetotabacarias.onrender.com]  
+As chaves de acesso aos dados privados estão disponíveis neste README e no relatório do projeto.
 
 > ⚠️ Desenvolvido com apoio de ferramentas de inteligência artificial, incluindo ChatGPT e outras ferramentas de apoio à programação.
 
