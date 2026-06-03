@@ -199,6 +199,14 @@ def grafico_tempo(df, include_js=False):
     if df_valid.empty:
         return ""
 
+    # Limitar o gráfico ao período do projeto: até junho de 2026
+    data_inicio = datetime(2026, 1, 1).date()
+    data_limite = datetime(2026, 6, 30).date()
+    df_valid = df_valid[(df_valid["data"] >= data_inicio) & (df_valid["data"] <= data_limite)]
+
+    if df_valid.empty:
+        return ""
+
     vendas = df_valid.groupby("data")["valor"].sum().sort_index()
 
     fig = go.Figure(data=[
@@ -215,8 +223,12 @@ def grafico_tempo(df, include_js=False):
         xaxis_title="Data",
         yaxis_title="Valor (€)",
         height=500,
-        margin=dict(l=20, r=20, t=50, b=40),
+        margin=dict(l=20, r=20, t=20, b=40),
         autosize=True
+    )
+
+    fig.update_xaxes(
+        range=[data_inicio, data_limite]
     )
 
     return fig_html(fig, "grafico_tempo", include_js)
@@ -310,6 +322,14 @@ def grafico_evolucao_categoria(df, include_js=False):
     if df_valid.empty:
         return ""
 
+    # Limitar o gráfico ao período do projeto: até junho de 2026
+    data_inicio = datetime(2026, 1, 1).date()
+    data_limite = datetime(2026, 6, 30).date()
+    df_valid = df_valid[(df_valid["data"] >= data_inicio) & (df_valid["data"] <= data_limite)]
+
+    if df_valid.empty:
+        return ""
+
     dados = df_valid.groupby(["data", "categoria"])["valor"].sum().reset_index()
 
     fig = go.Figure()
@@ -330,7 +350,11 @@ def grafico_evolucao_categoria(df, include_js=False):
         yaxis_title="Valor (€)",
         height=500,
         hovermode="x unified",
-        margin=dict(l=20, r=20, t=50, b=40)
+        margin=dict(l=20, r=20, t=20, b=40)
+    )
+
+    fig.update_xaxes(
+        range=[data_inicio, data_limite]
     )
 
     return fig_html(fig, "grafico_evolucao_categoria", include_js)
